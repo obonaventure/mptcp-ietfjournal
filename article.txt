@@ -1,0 +1,46 @@
+Ongoing Multipath TCP deployments
+=======================
+
+
+1. Introduction
+
+
+Explain briefly what is Multipath TCP and the benefits that it can bring
+
+
+2. Faster failover on smartphones
+
+As of this writing, there is only one significant deployment of Multipath
+TCP where both the client and the server use Multipath TCP : Siri
+
+Explain the Siri usage and some lessons learned from this deployment
+
+*one figure showing the end-to-end connection*
+
+3. Bandwidth aggregation on smartphones
+
+Explain the motivations for the KT deployment and some of  the
+lessons learned
+
+*one figure showing smartphone, WiFi+LTE, SOCKS server, and final server* 
+
+4. Bandwidth Aggregation in Access Networks
+
+4.1 Heterogeneous access networks 
+
+Explain the OVH deployment and some of the lessons learned from this deployment
+
+* one figure showing client, OverTheBox device, chaining of access routers, SOCKS server and final server*
+
+4.2 Hybrid access networks
+
+Explain the Tessares solution and some of the lessons learned from this deployment 
+
+* one figure showing client, Hybrid CPE, Hybrid Aggregation Gateway in transparent mode and final server*
+
+5. Conclusion
+
+
+
+6. References
+

@@ -83,6 +83,7 @@ End-to-end Multipath TCP
 
 Christoph's text
 
+
 Multipath TCP through SOCKS proxies
 ...................................
 
@@ -117,15 +118,85 @@ to provide higher bandwidth to their customers [WT-348].
 Combining access networks with SOCKS
 ....................................
 
-explain dhcp, chaining of access routers and the role of the SOCKS proxy
+SOCKS is also together with Multipath TCP to combine different access networks. 
+However the endhosts using these access networks are regular hosts that
+do not support Multipath TCP. To benefit the bonding capabilities of Multipath
+TCP, a middlebox is installed in the LAN of the endusers. This middlebox
+acts as a SOCKS client and interacts with a server in the cloud. Both
+the middlebox and the cloud server use Multipath TCP and can thus exploit
+any available access network provided that an IP address has been assigned
+to the middlebox on each access network. With IPv4, the access network gateways
+assign a private address to the middlebox that resides on their LAN. The middlebox
+then intercepts all the TCP packets sent by the hosts on the LAN to
+external destination. In practice, the middlebox can achieve this goal by
+acting as the main DHCP server in the LAN and disabling the DHCP servers on
+the attached access network gateways. Since the middlebox acts as the default
+gateway for the LAN, it intercepts all TCP packets and proxies them over
+Multipath TCP connections towards the SOCKS server running in the cloud.
+This server terminates the Multipath TCP connections and initiates regular
+TCP connections to the final destinations.
 
+This solution is already commercially deployed in two countries. Users
+report that they have used it to successfully combine xDSL (from ADSL to vDSL),
+DOCSIS, 3G, 4G and even satellite links.  
 
 
 Multipath TCP in hybrid access networks
 .......................................
 
-explain tessares approach with the transparent mode and the benefits that it
-gives
+
+Various network operators have deployed both fixed networks such as xDSL
+and wireless networks such as LTE. These two types of networks have different
+characteristics and different usage patterns. For example, the busy hours
+on LTE networks tend to be during the day while the busy hours of home
+users is more during the evening. There are many regions where combining
+such different access networks would increase the performance as perceived
+by the endusers. Several solutions are currently being developed [WT-348].
+Some of them leverage Multipath TCP to efficiently support TCP connections.
+A simple deployment is shown in figure {CPE}. Other deployments may use
+different devices for the wired and the wireless networks.
+
+
+{figure CPE with both xDSL and LTE, simpler to explain}
+
+
+client --- cpe ------ xDSL ---- HAG ---- server
+            +-------- LTE  -----+
+
+
+In this deployment, neither the client nor the server support
+Multipath TCP. Multipath TCP is used on the CPE and
+in the Hybrid Aggregation Gateway (HAG) that resides in a
+datacenter of the network operator that provides the
+two access networks that are combined. 
+
+When a client iniates a TCP connection towards a remote
+server, it sends a SYN packet. This packet is intercepted
+by the CPE that virtually terminates the TCP connection
+and then adds the MP_CAPABLE TCP before forwarding the
+packet over the xDSL network. The HAG, that resides on the path
+followed by all packets sent by the client over the xDSL network,
+intercepts the SYN packet. It virtually terminates the Multipath TCP
+connection and then forwards the SYN towards the server after having
+removed the MP_CAPABLE option. The server confirms the establishment
+of the connection by sending a SYN+ACK. This packet is intercepted by
+the HAG that updates its state for this connection and adds an
+MP_CAPABLE option before forwarding it towards the CPE. The CPE
+performs similar operations. It updates its state and finally forwards
+the SYN+ACK to the client without the MP_CAPABLE option to 
+confirm the establishment of the connection. At this point, there
+are three TCP connections. The first one is a regular TCP connection. It 
+starts at the client and is virtually terminated on the CPE. The
+second is a Multipath TCP connection that is virtually terminated
+on the CPE and the HAG. Finally, there is a regular TCP connection
+between the HAG and the remote server. From an operational viewpoint,
+it is important to note that with IPv6, neither the CPE nor the HAG
+need to translate the source and destination addresses of the forwarded
+TCP packets. The client IP address remains visible to the destination
+server. This is an important advantage compared to a SOCKS-based solution.
+Furthemore, the end-to-end connection can be created in within a single
+round-trip-time. This is important for short TCP connections.
+
 
 
 

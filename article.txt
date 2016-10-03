@@ -2,45 +2,159 @@ Ongoing Multipath TCP deployments
 =======================
 
 
-1. Introduction
+Introduction
+------------
+
+Multipath TCP, specified in [RFC6824] is the most recent extension to the
+the venerable Transmission Control Protocol (TCP). TCP was designed when
+hosts had a single interface interface and a single IP address. Each 
+TCP connection is identified by a four-tuple (source and 
+destination addresses and source and destination ports) and all the
+packets belonging to this connection carry this four-tuple. Once
+a connection has been established, it is impossible to change any
+of the elements of the four-tuple without breaking the connection.
+This is a severe limitation in today's networks for several reasons.
+First, many hosts are dual-stack and even if they have a single interface,
+they have two or more addresses and there are different network paths
+between a pair of communicating hosts. Second, many hosts have
+several interfaces. A typical example are the smartphones and tablets.
+Third, there is a growing number of mobile hosts on today's Internet
+whose address can change as they move from one wireless network to another.
+While cellular or entreprise WiFi networks try to preserve the same address
+for the mobile hosts even if they move, there are many WiFi networks that
+do not preserve IP addresses when hosts move from one access point to
+another. 
+
+Multipath TCP extends TCP to cope with these problems. Multipath TCP
+enables endhosts to exchange data belonging to one connection over
+different paths. To achieve this goal, Multipath TCP groups
+several TCP connections, called subflows in [RFC6824], into
+a single Multipath TCP connection. The first subflow of a Multipath
+TCP connection starts with a three-way handshake like a regular
+TCP connection. The main difference is that the SYN packet contains the
+MP\_CAPABLE option that negotiates the utilisation of Multipath
+TCP and also allows the endhosts to exchange random keys. These keys are
+used for two main purposes: identify the Multipath TCP connection and
+authenticate the establishment of subflows. On each host, a Multipath
+TCP connection is uniquely identified with a 32 bits Token that is
+derived from the key sent by the host during the establishment of
+the initial subflow. Once the first subflow has been established,
+any of the communicating host can create an additional subflow
+(from any of its own addresses towards any of the addresses of the 
+remote host). For this, a new SYN is sent with a MP\_JOIN option.
+This option contains the token that identifies the Multipath TCP
+connection to which the new subflow must be associated with and the
+keys exchanged during the establishment of the initial subflow are used
+to authenticate the newly established subflow. Such subflows can be
+created and terminated at any time, which is very important for
+mobile hosts. Each data can be sent over any of the subflows that
+currently compose the Multipath TCP connection. If a subflow fails,
+all the data that was transmitted over this subflow and has not yet been
+acknowledged will be retransmitted over other subflows. If necessary,
+new subflows can be created since Multipath TCP supports both make-before-break
+and break-before-make. Due to space limitations, we do not provide a detailed
+description of the many details of Multipath TCP. Those can be found elsewhere
+[RFC6824] [NSDI11]
+
+There are now multiple independant interoperable implementations of Multipath
+TCP. The most widely used ones are the one used in iOS/macOS [Ref] and the Linux
+implementation [MPTCPLinux]. Multipath TCP is supported by load balancers and
+there are implementation efforts on FreeBSD and Solaris. In this document,
+we describe the ongoing deployments of services that leverage the unique
+capabilities of Multipath TCP and discuss the lessons that have already been
+learned from this deployment.
 
 
-Explain briefly what is Multipath TCP and the benefits that it can bring
 
 
-2. Faster failover on smartphones
+Multipath TCP on smartphones
+----------------------------
 
-As of this writing, there is only one significant deployment of Multipath
-TCP where both the client and the server use Multipath TCP : Siri
-
-Explain the Siri usage and some lessons learned from this deployment
-
-*one figure showing the end-to-end connection*
-
-3. Bandwidth aggregation on smartphones
-
-Explain the motivations for the KT deployment and some of  the
-lessons learned
-
-*one figure showing smartphone, WiFi+LTE, SOCKS server, and final server* 
-
-4. Bandwidth Aggregation in Access Networks
-
-4.1 Heterogeneous access networks 
-
-Explain the OVH deployment and some of the lessons learned from this deployment
-
-* one figure showing client, OverTheBox device, chaining of access routers, SOCKS server and final server*
-
-4.2 Hybrid access networks
-
-Explain the Tessares solution and some of the lessons learned from this deployment 
-
-* one figure showing client, Hybrid CPE, Hybrid Aggregation Gateway in transparent mode and final server*
-
-5. Conclusion
+The largest deployment of Multipath TCP is on smartphones. There are two widespread
+utilisations of Multipath TCP in mobile networks. The first deployment uses 
+Multipath TCP to support a voice recognition application that is very sensitive
+to delay. The second deployment uses Multipath TCP through SOCKS proxies to
+offer higher bandwidth to smartphones by bonding their WiFi and LTE interfaces.
 
 
+End-to-end Multipath TCP
+........................
 
-6. References
 
+Christoph's text
+
+Multipath TCP through SOCKS proxies
+...................................
+
+
+SungHoon's text
+
+Show a drawing of a SOCKS proxy and explain which parts works with MPTCP
+and which part works with TCP
+
+Hybrid access networks
+----------------------
+
+Another important use case for Multipath TCP lies in the access
+networks. There are many situations where a single access network is
+not sufficient to meet the requirements of a given enduser. In many
+regions of the world, the available access networks only provide a
+very limited bandwidth. A typical example are rural areas where it is
+very costly for network operators to deploy high-bandwidth access
+networks. There are many regions where rural users can only
+obtain a few Mbps while users in large cities have access to
+fiber-based networks that provide much higher bandwidth. Even if bandwidth
+is limited, it is often possible to subscribe to different network
+services that when combine provide higher bandwidth and higher resiliency. 
+Several companies have deployed solutions that leverage the unique bonding
+capabilities of Multipath TCP. We describe two of them. The first one relies 
+on SOCKS proxies and enables endusers to efficiently combine network
+services from different providers. The second is targeted at network operators
+that wish to combine their fixed (e.g. xDSL) and wireless network (e.g. LTE)
+to provide higher bandwidth to their customers [WT-348]. 
+
+
+Combining access networks with SOCKS
+....................................
+
+explain dhcp, chaining of access routers and the role of the SOCKS proxy
+
+
+
+Multipath TCP in hybrid access networks
+.......................................
+
+explain tessares approach with the transparent mode and the benefits that it
+gives
+
+
+
+
+Conclusion
+----------
+
+Despite its young age, Multipath TCP has already been deployed at a large
+scale on the Internet. 
+
+Like all TCP extensions, Multipath TCP was designed by assuming that the
+two communicating hosts would support it. This corresponds to the largest
+deployment on smartphones. However, Multipath TCP's ability to efficiently
+combine various access networks has attracted new use cases where the
+multipath capability is provided as a service inside the network even
+when only one or none of the communicating hosts support Multipath TCP. 
+
+
+
+
+References
+----------
+
+[RFC6824]
+
+[WT-348]
+
+[RFC1928]  SOCKS
+
+[NSDI]
+
+[MPTCPLinux]

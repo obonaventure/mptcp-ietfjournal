@@ -1,5 +1,5 @@
-Ongoing Multipath TCP deployments
-=======================
+Multipath TCP deployments
+=========================
 
 
 Introduction
@@ -7,27 +7,30 @@ Introduction
 
 Multipath TCP, specified in [RFC6824] is the most recent extension to the
 the venerable Transmission Control Protocol (TCP). TCP was designed when
-hosts had a single interface interface and a single IP address. Each 
+hosts had a single network interface and a single IP address. Each 
 TCP connection is identified by a four-tuple (source and 
 destination addresses and source and destination ports) and all the
 packets belonging to this connection carry this four-tuple. Once
-a connection has been established, it is impossible to change any
+a TCP connection has been established, it is impossible to change any
 of the elements of the four-tuple without breaking the connection.
 This is a severe limitation in today's networks for several reasons.
 First, many hosts are dual-stack and even if they have a single interface,
 they have two or more addresses and there are different network paths
-between a pair of communicating hosts. Second, many hosts have
+between any pair of communicating hosts. Second, many hosts have
 several interfaces. A typical example are the smartphones and tablets.
 Third, there is a growing number of mobile hosts on today's Internet
 whose address can change as they move from one wireless network to another.
+
+{::comment}
 While cellular or entreprise WiFi networks try to preserve the same address
 for the mobile hosts even if they move, there are many WiFi networks that
 do not preserve IP addresses when hosts move from one access point to
 another. 
+{:/comment}
 
-Multipath TCP extends TCP to cope with these problems. Multipath TCP
+Multipath TCP extends TCP to cope with all these issues. Multipath TCP
 enables endhosts to exchange data belonging to one connection over
-different paths. To achieve this goal, Multipath TCP groups
+different paths. To achieve this goal, Multipath TCP combines
 several TCP connections, called subflows in [RFC6824], into
 a single Multipath TCP connection. The first subflow of a Multipath
 TCP connection starts with a three-way handshake like a regular
@@ -42,7 +45,7 @@ the initial subflow. Once the first subflow has been established,
 any of the communicating host can create an additional subflow
 (from any of its own addresses towards any of the addresses of the 
 remote host). For this, a new SYN is sent with a MP\_JOIN option.
-This option contains the token that identifies the Multipath TCP
+This option contains the Token that identifies the Multipath TCP
 connection to which the new subflow must be associated with and the
 keys exchanged during the establishment of the initial subflow are used
 to authenticate the newly established subflow. Such subflows can be
@@ -54,26 +57,24 @@ acknowledged will be retransmitted over other subflows. If necessary,
 new subflows can be created since Multipath TCP supports both make-before-break
 and break-before-make. Due to space limitations, we do not provide a detailed
 description of the many details of Multipath TCP. Those can be found elsewhere
-[RFC6824] [NSDI11]
+[RFC6824] [NSDI12].
 
 There are now multiple independant interoperable implementations of Multipath
-TCP. The most widely used ones are the one used in iOS/macOS [Ref] and the Linux
-implementation [MPTCPLinux]. Multipath TCP is supported by load balancers and
+TCP. The most widely used ones are the iOS/macOS [Ref] and the Linux
+implementations [MPTCPLinux]. Multipath TCP is supported by load balancers and
 there are implementation efforts on FreeBSD and Solaris. In this document,
-we describe the ongoing deployments of services that leverage the unique
-capabilities of Multipath TCP and discuss the lessons that have already been
-learned from this deployment.
+we describe the commercial deployments of services that leverage the unique
+capabilities of Multipath TCP. 
 
 
+Smartphones
+-----------
 
-
-Multipath TCP on smartphones
-----------------------------
-
-The largest deployment of Multipath TCP is on smartphones. There are two widespread
+The largest deployment of Multipath TCP is on smartphones. 
+There are two widespread
 utilisations of Multipath TCP in mobile networks. The first deployment uses 
 Multipath TCP to support a voice recognition application that is very sensitive
-to delay. The second deployment uses Multipath TCP through SOCKS proxies to
+to delays. The second deployment uses Multipath TCP through SOCKS proxies to
 offer higher bandwidth to smartphones by bonding their WiFi and LTE interfaces.
 
 
@@ -87,11 +88,31 @@ Christoph's text
 Multipath TCP through SOCKS proxies
 ...................................
 
+Besides the servers deployed specifically for the previous use case, there
+are very few servers that already support Multipath TCP. Despite of this, 
+several network operators would like to enable their smartphone users to
+achieve increased throughput by combining existing cellular and WiFi
+networks. Network operators in several countries have relied on SOCKS
+[RFC1929] to simultanesouly use the WiFi and cellular networks. 
 
-SungHoon's text
+Several models of commercial Android smartphones include the Multipath
+TCP implementation in the Linux kernel [MPTCPLinux] and a SOCKS client.
+The SOCKS client running on the smartphone intercepts any TCP
+connection attempt to a distant server. It then creates a connection 
+to a SOCKS server managed by the network operator. The user is authenticated 
+and then the SOCKS client sends a command to the server  that creates a TCP
+connection towards the remote server. At this point, there is a Multipath
+TCP connection between the smartphone and the SOCKS server and a
+TCP connection between the SOCKS server and the remote server. The SOCKS
+server relays all data sent on the Multipath TCP connection over the TCP
+connection and vice-versa. Smartphones create additional subflows towards
+the SOCKS server over the other available interfaces to achieve higher bandwidth. 
 
-Show a drawing of a SOCKS proxy and explain which parts works with MPTCP
-and which part works with TCP
+{::comment}
+
+Some data from KT ?
+
+{:/comment}
 
 Hybrid access networks
 ----------------------
@@ -102,11 +123,9 @@ not sufficient to meet the requirements of a given enduser. In many
 regions of the world, the available access networks only provide a
 very limited bandwidth. A typical example are rural areas where it is
 very costly for network operators to deploy high-bandwidth access
-networks. There are many regions where rural users can only
-obtain a few Mbps while users in large cities have access to
-fiber-based networks that provide much higher bandwidth. Even if bandwidth
+networks. Even if access network bandwidth
 is limited, it is often possible to subscribe to different network
-services that when combine provide higher bandwidth and higher resiliency. 
+services that when combined provide higher bandwidth and higher resiliency. 
 Several companies have deployed solutions that leverage the unique bonding
 capabilities of Multipath TCP. We describe two of them. The first one relies 
 on SOCKS proxies and enables endusers to efficiently combine network
@@ -118,26 +137,24 @@ to provide higher bandwidth to their customers [WT-348].
 Combining access networks with SOCKS
 ....................................
 
-SOCKS is also together with Multipath TCP to combine different access networks. 
-However the endhosts using these access networks are regular hosts that
-do not support Multipath TCP. To benefit the bonding capabilities of Multipath
-TCP, a middlebox is installed in the LAN of the endusers. This middlebox
+SOCKS is also used together with Multipath TCP to combine 
+different access networks. In this deployment, endhosts are regular hosts that
+do not support Multipath TCP. To benefit from 
+the bonding capabilities of Multipath
+TCP, a middlebox is installed in the enduser's LAN. This middlebox
 acts as a SOCKS client and interacts with a server in the cloud. Both
 the middlebox and the cloud server use Multipath TCP and can thus exploit
 any available access network provided that an IP address has been assigned
-to the middlebox on each access network. With IPv4, the access network gateways
-assign a private address to the middlebox that resides on their LAN. The middlebox
-then intercepts all the TCP packets sent by the hosts on the LAN to
-external destination. In practice, the middlebox can achieve this goal by
-acting as the main DHCP server in the LAN and disabling the DHCP servers on
-the attached access network gateways. Since the middlebox acts as the default
-gateway for the LAN, it intercepts all TCP packets and proxies them over
-Multipath TCP connections towards the SOCKS server running in the cloud.
+to the middlebox on each access network. The middlebox typically acts as
+the default gateway in the enduser's LAN and intercepts all TCP packets 
+sent by the hosts on the LAN to external destinations and proxies them over
+Multipath TCP connections towards a SOCKS server running in the cloud.
 This server terminates the Multipath TCP connections and initiates regular
 TCP connections to the final destinations.
 
 This solution is already commercially deployed in two countries. Users
-report that they have used it to successfully combine xDSL (from ADSL to vDSL),
+report that they have used it to successfully combine different types of
+access links including xDSL (from ADSL to vDSL),
 DOCSIS, 3G, 4G and even satellite links.  
 
 
@@ -145,12 +162,12 @@ Multipath TCP in hybrid access networks
 .......................................
 
 
-Various network operators have deployed both fixed networks such as xDSL
-and wireless networks such as LTE. These two types of networks have different
+Various network operators have deployed both fixed (e.g. xDSL)
+and wireless networks (e.g. LTE). These two types of networks have different
 characteristics and different usage patterns. For example, the busy hours
 on LTE networks tend to be during the day while the busy hours of home
-users is more during the evening. There are many regions where combining
-such different access networks would increase the performance as perceived
+users are more during the evening. There are many regions where combining
+such access networks would increase the performance perceived
 by the endusers. Several solutions are currently being developed [WT-348].
 Some of them leverage Multipath TCP to efficiently support TCP connections.
 A simple deployment is shown in figure {CPE}. Other deployments may use
@@ -167,7 +184,7 @@ client --- cpe ------ xDSL ---- HAG ---- server
 In this deployment, neither the client nor the server support
 Multipath TCP. Multipath TCP is used on the CPE and
 in the Hybrid Aggregation Gateway (HAG) that resides in a
-datacenter of the network operator that provides the
+datacenter of the network operator that manages the
 two access networks that are combined. 
 
 When a client iniates a TCP connection towards a remote
@@ -176,28 +193,26 @@ by the CPE that virtually terminates the TCP connection
 and then adds the MP_CAPABLE TCP before forwarding the
 packet over the xDSL network. The HAG, that resides on the path
 followed by all packets sent by the client over the xDSL network,
-intercepts the SYN packet. It virtually terminates the Multipath TCP
+intercepts this SYN packet. It virtually terminates the Multipath TCP
 connection and then forwards the SYN towards the server after having
 removed the MP_CAPABLE option. The server confirms the establishment
 of the connection by sending a SYN+ACK. This packet is intercepted by
 the HAG that updates its state for this connection and adds an
 MP_CAPABLE option before forwarding it towards the CPE. The CPE
-performs similar operations. It updates its state and finally forwards
+performs similar operations. It updates its state and forwards
 the SYN+ACK to the client without the MP_CAPABLE option to 
 confirm the establishment of the connection. At this point, there
 are three TCP connections. The first one is a regular TCP connection. It 
 starts at the client and is virtually terminated on the CPE. The
-second is a Multipath TCP connection that is virtually terminated
+second one is a Multipath TCP connection that is virtually terminated
 on the CPE and the HAG. Finally, there is a regular TCP connection
 between the HAG and the remote server. From an operational viewpoint,
 it is important to note that with IPv6, neither the CPE nor the HAG
 need to translate the source and destination addresses of the forwarded
 TCP packets. The client IP address remains visible to the destination
 server. This is an important advantage compared to a SOCKS-based solution.
-Furthemore, the end-to-end connection can be created in within a single
-round-trip-time. This is important for short TCP connections.
-
-
+Furthemore, the connection between a client and a server 
+can be created within a single round-trip-time. 
 
 
 
@@ -205,7 +220,14 @@ Conclusion
 ----------
 
 Despite its young age, Multipath TCP has already been deployed at a large
-scale on the Internet. 
+scale on the Internet. On smartphones, Multipath TCP brings faster
+handovers for delay-sensitive applications and higher bandwidth by
+combining cellular and WiFi networks. In access networks, Multipath
+TCP enables the support of hybrid access networks that combine fixed
+and wireless networks to provide higher bandwidth services.
+
+
+{::comment}
 
 Like all TCP extensions, Multipath TCP was designed by assuming that the
 two communicating hosts would support it. This corresponds to the largest
@@ -214,18 +236,30 @@ combine various access networks has attracted new use cases where the
 multipath capability is provided as a service inside the network even
 when only one or none of the communicating hosts support Multipath TCP. 
 
-
+{:/comment}
 
 
 References
 ----------
 
-[RFC6824]
 
-[WT-348]
+[RFC6824]  Ford, A., Raiciu, C., Handley, M., and O. Bonaventure,
+           "TCP Extensions for Multipath Operation with Multiple
+           Addresses", RFC 6824, DOI 10.17487/RFC6824, January 2013
 
-[RFC1928]  SOCKS
+[TR-348] Broadband Forum, TR 348 - Hybrid Access Broadband Network Architecture
+	 July 2016, https://www.broadband-forum.org/technical/download/TR-348.pdf
 
-[NSDI]
+[RFC1928] Leech, M., Ganis, M., Lee, Y., Kuris, R., Koblas, D., and
+          L. Jones, "SOCKS Protocol Version 5", RFC 1928,
+          DOI 10.17487/RFC1928, March 1996
 
-[MPTCPLinux]
+[NSDI12]  Raiciu, C., Paasch, C., Barre, S., Ford, A., Honda, M.,
+          Duchene, F., Bonaventure, O., and M. Handley, "How Hard
+          Can It Be? Designing and Implementing a Deployable
+          Multipath TCP", USENIX Symposium of Networked Systems
+          Design and Implementation (NSDI12) , April 2012
+
+[MPTCPLinux] Paasch, C., Barre, S., and . et al, "Multipath TCP
+             implementation in the Linux kernel",
+             http://www.multipath-tcp.org

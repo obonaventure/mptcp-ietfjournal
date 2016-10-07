@@ -69,6 +69,8 @@ handover from
 one interface to another, making it the perfect candidate to solve
 the above described losses of connectivity.
 
+{figure 1 from ppt}
+
 Siri is the digital assistant of Apple's iOS and macOS operating
 system.
 People ask Siri for directions to a destination or to send a
@@ -144,7 +146,7 @@ networks. Network operators in several countries have relied on SOCKS
 [RFC1929] to simultaneously use the WiFi and cellular networks. From
 an operator's viewpoint, the main benefit of coupling SOCKS with MPTCP
 is that it is easy deployable since no or few dependency exists
-with existing cellular core and WiFi infrastructure.
+with existing cellular core and WiFi infrastructure. [K15]
 
 Several models of commercial Android smartphones include the Multipath
 TCP implementation in the Linux kernel [MPTCPLinux] and a SOCKS client.
@@ -214,18 +216,14 @@ and wireless networks (e.g. LTE) and wish to combine them to provide
 higher bandwidth services. Multipath TCP is also used to provide
 such services. One of such deployments is shown in the figure below.
 
-{figure CPE with both xDSL and LTE, simpler to explain}
-
-
-client --- cpe ------ xDSL ---- HAG ---- server
-            +-------- LTE  -----+
+{figure 2 from ppt}
 
 
 In this deployment, neither the client nor the server support
 Multipath TCP. Multipath TCP is used on the CPE and
 in the Hybrid Aggregation Gateway (HAG) that resides in a
 datacenter of the network operator that manages both
-access networks. 
+access networks [PDBB16].  
 
 When a client initiates a TCP connection towards a remote
 server, it sends a SYN packet. This packet is intercepted
@@ -293,6 +291,9 @@ References
 
 [WAssist] Apple, WiFi Assist, https://support.apple.com/en-us/HT205296
 
-[
+[KT] S. Kim, "KT’s GiGA LTE", IETF93,
+https://www.ietf.org/proceedings/93/slides/slides-93-mptcp-3.pdf
 
-[
+[PDBB16] B. Peirens, G. Detal, S. Barre, O. Bonaventure, "Link bonding
+with transparent Multipath TCP", Internet draft,
+draft-peirens-mptcp-transparent-00, 2016
